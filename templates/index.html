@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atendimento Hospitalar</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    /* Estilos globais */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Roboto', Arial, sans-serif;
+      font-size: 16px;
+      color: #333;
+      background-color: #f5f5f5;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    /* Estilos do formulário de registro */
+    .registration-form {
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 500;
+      transition: background-color 0.3s ease;
+      margin-right: 10px; /* Espaço entre os botões */
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    /* Estilos da exibição de informações */
+    .care-display {
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      margin-top: 40px;
+    }
+
+    .care-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .care-info h2 {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .care-info p {
+      font-size: 18px;
+      color: #666;
+    }
+
+    /* Estilos responsivos */
+    @media (max-width: 768px) {
+      .container {
+        padding: 30px 15px;
+      }
+
+      .registration-form, .care-display {
+        padding: 20px;
+      }
+
+      .care-info h2 {
+        font-size: 18px;
+      }
+
+      .care-info p {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Atendimento</h1>
+
+    <div class="registration-form">
+      <h2>Registro de Paciente</h2>
+      <form id="patient-form">
+        <div class="form-group">
+          <label for="name">Nome:</label>
+          <input type="text" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+          <label for="age">Idade:</label>
+          <input type="number" id="age" name="age" required>
+        </div>
+        <div class="form-group">
+          <label for="room">Sala:</label>
+          <select id="room" name="room" required>
+            <option value="">Selecione uma sala</option>
+            <option value="101">Sala 101</option>
+            <option value="102">Sala 102</option>
+            <option value="103">Sala 302</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="doctor">Médico:</label>
+          <select id="doctor" name="doctor" required>
+            <option value="">Selecione um médico</option>
+            <option value="Dr. Silva">Dr. Alex CARDIO</option>
+            <option value="Dra. Oliveira">Dra. Soraya PED</option>
+            <option value="Dr. Pereira">Dr. Jonh URO</option>
+          </select>
+        </div>
+        <button type="submit">Registrar</button>
+        <button type="button" id="generate-certificate">Gerar Atestado de Horas</button>
+        <button type="button" id="generate-receipt">Gerar Receita</button>
+      </form>
+
+      <h2>Medicamentos Prescritos</h2>
+      <form id="medications-form">
+        <div class="form-group">
+          <label for="medications">Descrição dos Medicamentos:</label>
+          <textarea id="medications" name="medications" rows="4" placeholder="Ex: Medicamento A - 10 gotas - 2x ao dia"></textarea>
+        </div>
+      </form>
+    </div>
+
+    <div class="care-display">
+      <h2>Informações de Atendimento</h2>
+      <div class="care-info">
+        <h2>Nome:</h2>
+        <p id="patient-name">-</p>
+      </div>
+      <div class="care-info">
+        <h2>Idade:</h2>
+        <p id="patient-age">-</p>
+      </div>
+      <div class="care-info">
+        <h2>Sala:</h2>
+        <p id="patient-room">-</p>
+      </div>
+      <div class="care-info">
+        <h2>Médico:</h2>
+        <p id="patient-doctor">-</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Obter o formulário e os elementos de exibição
+    const form = document.getElementById('patient-form');
+    const medicationsForm = document.getElementById('medications-form');
+    const patientNameDisplay = document.getElementById('patient-name');
+    const patientAgeDisplay = document.getElementById('patient-age');
+    const patientRoomDisplay = document.getElementById('patient-room');
+    const patientDoctorDisplay = document.getElementById('patient-doctor');
+
+    // Adicionar um ouvinte de evento ao envio do formulário
+    form.addEventListener('submit', (event) => {
+      event.preventDefault(); // Impedir o envio padrão do formulário
+
+      // Obter os dados do formulário
+      const name = document.getElementById('name').value;
+      const age = document.getElementById('age').value;
+      const room = document.getElementById('room').value;
+      const doctor = document.getElementById('doctor').value;
+
+      // Atualizar os elementos de exibição
+      patientNameDisplay.textContent = name;
+      patientAgeDisplay.textContent = age;
+      patientRoomDisplay.textContent = room;
+      patientDoctorDisplay.textContent = doctor;
+
+      // Redefinir o formulário
+      form.reset();
+    });
+
+    // Função para gerar atestado de horas
+    document.getElementById('generate-certificate').addEventListener('click', () => {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const name = patientNameDisplay.textContent;
+      const age = patientAgeDisplay.textContent;
+      const room = patientRoomDisplay.textContent;
+      const doctor = patientDoctorDisplay.textContent;
+
+      doc.text(`Atestado de Horas`, 20, 20);
+      doc.text(`Nome: ${name}`, 20, 40);
+      doc.text(`Idade: ${age}`, 20, 50);
+      doc.text(`Sala: ${room}`, 20, 60);
+      doc.text(`Médico: ${doctor}`, 20, 70);
+      doc.text(`Data: ${new Date().toLocaleDateString()}`, 20, 80);
+
+      doc.save('atestado_horas.pdf');
+    });
+
+    // Função para gerar receita médica
+    document.getElementById('generate-receipt').addEventListener('click', () => {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const name = patientNameDisplay.textContent;
+      const doctor = patientDoctorDisplay.textContent;
+      const medications = document.getElementById('medications').value;
+
+      doc.text(`Receita Médica`, 20, 20);
+      doc.text(`Nome: ${name}`, 20, 40);
+      doc.text(`Médico: ${doctor}`, 20, 50);
+      doc.text(`Data: ${new Date().toLocaleDateString()}`, 20, 60);
+      doc.text(`Medicamentos Prescritos:`, 20, 70);
+      doc.text(medications, 20, 80);
+      doc.text(`Carimbo e Assinatura:`, 20, 100); // Espaço para carimbo e assinatura
+
+      doc.save('receita_medica.pdf');
+    });
+  </script>
+</body>
+</html>
